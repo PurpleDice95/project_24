@@ -38,8 +38,12 @@ public class BufferPool {
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
+    
+    private int numPages;
+    private ConcurrentHashMap<PageId, Page> bufferPool;
     public BufferPool(int numPages) {
-        // some code goes here
+        this.numPages = numPages;
+        this.bufferPool = new ConcurrentHashMap<>(numPages);
     }
     
     public static int getPageSize() {
@@ -73,8 +77,16 @@ public class BufferPool {
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        if (!bufferPool.containsKey(pid)) {
+            // Page not in buffer pool, fetch from disk
+            DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
+            Page page = dbFile.readPage(pid);
+            if (bufferPool.size() >= numPages) {
+                evictPage(); // Evict a page if buffer pool is full
+            }
+            bufferPool.put(pid, page);
+        }
+        return bufferPool.get(pid);
     }
 
     /**

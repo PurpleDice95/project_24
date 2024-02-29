@@ -27,8 +27,16 @@ public class Catalog {
      * Constructor.
      * Creates a new, empty catalog.
      */
+    private final Map<Integer, DbFile> idToDbFile;
+    private final Map<Integer, String> idToName;
+    private final Map<String, Integer> nameToId;
+    private final Map<Integer, String> idToPrimaryKey;
+
     public Catalog() {
-        // some code goes here
+        idToDbFile = new ConcurrentHashMap<>();
+        idToName = new ConcurrentHashMap<>();
+        nameToId = new ConcurrentHashMap<>();
+        idToPrimaryKey = new ConcurrentHashMap<>();
     }
 
     /**
@@ -41,7 +49,11 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
-        // some code goes here
+        int tableId = file.getId();
+        idToDbFile.put(tableId, file);
+        idToName.put(tableId, name);
+        nameToId.put(name, tableId);
+        idToPrimaryKey.put(tableId, pkeyField);
     }
 
     public void addTable(DbFile file, String name) {
@@ -64,8 +76,10 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public int getTableId(String name) throws NoSuchElementException {
-        // some code goes here
-        return 0;
+        if (name == null || !nameToId.containsKey(name)) {
+            throw new NoSuchElementException("Table with name " + name + " does not exist");
+        }
+        return nameToId.get(name);
     }
 
     /**
@@ -75,8 +89,10 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
-        // some code goes here
-        return null;
+        if (!idToDbFile.containsKey(tableid)) {
+            throw new NoSuchElementException("Table with ID " + tableid + " does not exist");
+        }
+        return idToDbFile.get(tableid).getTupleDesc();
     }
 
     /**
@@ -86,28 +102,30 @@ public class Catalog {
      *     function passed to addTable
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
-        // some code goes here
-        return null;
+        if (!idToDbFile.containsKey(tableid)) {
+            throw new NoSuchElementException("Table with ID " + tableid + " does not exist");
+        }
+        return idToDbFile.get(tableid);
     }
 
     public String getPrimaryKey(int tableid) {
-        // some code goes here
-        return null;
+        return idToPrimaryKey.getOrDefault(tableid, "");
     }
 
     public Iterator<Integer> tableIdIterator() {
-        // some code goes here
-        return null;
+        return idToDbFile.keySet().iterator();
     }
 
     public String getTableName(int id) {
-        // some code goes here
-        return null;
+        return idToName.getOrDefault(id, null);
     }
     
     /** Delete all tables from the catalog */
     public void clear() {
-        // some code goes here
+        idToDbFile.clear();
+        idToName.clear();
+        nameToId.clear();
+        idToPrimaryKey.clear();
     }
     
     /**
