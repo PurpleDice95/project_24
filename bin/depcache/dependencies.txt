@@ -174,14 +174,15 @@ simpledb.storage.BufferPool
 java.io.ByteArrayInputStream
 java.io.DataOutputStream
 simpledb.common.Database
+java.lang.Math
 java.util.NoSuchElementException
 java.text.ParseException
 java.lang.Byte
 simpledb.storage.HeapPage
-java.lang.UnsupportedOperationException
 simpledb.common.DbException
 simpledb.common.Type
 simpledb.storage.Tuple
+simpledb.storage.HeapPage$1
 java.io.IOException
 simpledb.storage.Field
 simpledb.storage.HeapPageId
@@ -280,6 +281,12 @@ simpledb.storage.Field
 java.lang.IllegalArgumentException
 simpledb.storage.TupleDesc
 java.io.Serializable
+||:simpledb.storage.HeapPage$1
+java.util.Iterator
+simpledb.storage.HeapPage$1
+java.lang.Object
+java.util.NoSuchElementException
+simpledb.storage.HeapPage
 ||:simpledb.systemtest.BTreeTest
 java.lang.System
 junit.framework.JUnit4TestAdapter
@@ -830,7 +837,6 @@ simpledb.execution.Predicate$Op
 java.io.Serializable
 simpledb.execution.Predicate
 ||:simpledb.storage.HeapPageId
-java.lang.UnsupportedOperationException
 simpledb.storage.PageId
 simpledb.storage.HeapPageId
 java.lang.Object
