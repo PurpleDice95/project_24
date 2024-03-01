@@ -83,6 +83,7 @@ public class BufferPool {
             Page page = dbFile.readPage(pid);
             if (bufferPool.size() >= numPages) {
                 evictPage(); // Evict a page if buffer pool is full
+                // throw new DbException("Buffer pool is full");
             }
             bufferPool.put(pid, page);
         }
