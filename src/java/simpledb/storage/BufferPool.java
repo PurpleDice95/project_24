@@ -150,7 +150,13 @@ public class BufferPool {
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
+        if (t == null) {
+            throw new DbException("Tuple is null");
+        }
         HeapFile heapFile = (HeapFile) Database.getCatalog().getDatabaseFile(tableId);
+        if (heapFile == null) {
+            throw new DbException("HeapFile is null");
+        }
         heapFile.insertTuple(tid, t);
     }
 
@@ -169,8 +175,17 @@ public class BufferPool {
      */
     public  void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
+        if (t == null) {
+            throw new DbException("Tuple is null");
+        }
         PageId pid = t.getRecordId().getPageId();
+        if (pid == null) {
+            throw new DbException("PageId is null");
+        }
         HeapFile heapFile = (HeapFile) Database.getCatalog().getDatabaseFile(pid.getTableId());
+        if (heapFile == null) {
+            throw new DbException("HeapFile is null");
+        }
         heapFile.deleteTuple(tid, t);
     }
 
