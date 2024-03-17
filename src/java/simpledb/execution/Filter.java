@@ -14,6 +14,10 @@ public class Filter extends Operator {
 
     private static final long serialVersionUID = 1L;
 
+
+    private Predicate predicate;
+    private OpIterator child;
+    private boolean opened;
     /**
      * Constructor accepts a predicate to apply and a child operator to read
      * tuples to filter from.
@@ -24,30 +28,34 @@ public class Filter extends Operator {
      *            The child operator
      */
     public Filter(Predicate p, OpIterator child) {
-        // some code goes here
+        this.predicate = p;
+        this.child = child;
+        this.opened = false;
     }
 
     public Predicate getPredicate() {
-        // some code goes here
-        return null;
+        return predicate;
     }
 
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return child.getTupleDesc();
     }
 
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-        // some code goes here
+        child.open();
+        super.open();
+        opened = true;
     }
 
     public void close() {
-        // some code goes here
+        super.close();
+        child.close();
+        opened = false;
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+        child.rewind();
     }
 
     /**
@@ -61,19 +69,28 @@ public class Filter extends Operator {
      */
     protected Tuple fetchNext() throws NoSuchElementException,
             TransactionAbortedException, DbException {
-        // some code goes here
+        if (!opened)
+            throw new IllegalStateException("Operator not yet open");
+        
+        while (child.hasNext()) {
+            Tuple tuple = child.next();
+            if (predicate.filter(tuple))
+                return tuple;
+        }
         return null;
     }
 
     @Override
     public OpIterator[] getChildren() {
-        // some code goes here
-        return null;
+        return new OpIterator[]{child};
     }
 
     @Override
     public void setChildren(OpIterator[] children) {
-        // some code goes here
+        if (children.length != 1)
+            throw new IllegalArgumentException("Expected only one child operator");
+        
+        this.child = children[0];
     }
 
 }

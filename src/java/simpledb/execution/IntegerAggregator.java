@@ -3,6 +3,15 @@ package simpledb.execution;
 import simpledb.common.Type;
 import simpledb.storage.Tuple;
 
+import simpledb.storage.Field;
+import simpledb.storage.IntField;
+import simpledb.storage.StringField;
+import simpledb.storage.TupleDesc;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
 /**
  * Knows how to compute some aggregate over a set of IntFields.
  */
@@ -10,6 +19,16 @@ public class IntegerAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
 
+    private int gbfield;
+    private Type gbfieldtype;
+    private int afield;
+    private Op what;
+
+    private Map<Field, Integer> aggregateMap;
+    private Map<Field, Integer> avgCounts;
+    private int totalCount;
+    private int totalValue;
+    private boolean startedFlag;
     /**
      * Aggregate constructor
      * 
@@ -26,7 +45,14 @@ public class IntegerAggregator implements Aggregator {
      */
 
     public IntegerAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        this.gbfield = gbfield;
+        this.gbfieldtype = gbfieldtype;
+        this.afield = afield;
+        this.what = what;
+        this.aggregateMap = new HashMap<>();
+        this.avgCounts = new HashMap<>();
+        this.startedFlag=false;
+        this.totalCount = 0;
     }
 
     /**
@@ -37,7 +63,39 @@ public class IntegerAggregator implements Aggregator {
      *            the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        int aggregateValue = ((IntField) tup.getField(afield)).getValue();
+
+        if (gbfield == NO_GROUPING) {
+            if (!startedFlag) {
+                startedFlag = true;
+                totalValue = aggregateValue;
+            } else {
+                if (what == Op.AVG) {
+                    totalValue = applyAvg(totalValue, aggregateValue, totalCount + 1);
+                } else {
+                    totalValue = applyOp(totalValue, aggregateValue);
+                }
+            }
+            totalCount++;
+        } else {
+            if (aggregateMap.get(tup.getField(gbfield)) == null) {
+                if (what == Op.AVG) {
+                    avgCounts.put(tup.getField(gbfield), 1);
+                }
+                aggregateMap.put(tup.getField(gbfield), aggregateValue);
+                
+            } else {
+                if (what == Op.AVG) {
+                    avgCounts.put(tup.getField(gbfield), avgCounts.get(tup.getField(gbfield)) + 1);
+                    aggregateMap.put(
+                        tup.getField(gbfield), 
+                        applyAvg(aggregateMap.get(tup.getField(gbfield)), aggregateValue, avgCounts.get(tup.getField(gbfield)))
+                    );
+                } else {
+                    aggregateMap.put(tup.getField(gbfield), applyOp(aggregateMap.get(tup.getField(gbfield)), aggregateValue));
+                }
+            }
+        }
     }
 
     /**
@@ -49,9 +107,77 @@ public class IntegerAggregator implements Aggregator {
      *         the constructor.
      */
     public OpIterator iterator() {
-        // some code goes here
-        throw new
-        UnsupportedOperationException("please implement me for lab2");
+        TupleDesc td;
+        if (gbfield == NO_GROUPING) {
+            td = new TupleDesc(new Type[]{Type.INT_TYPE});
+        } else {
+            td = new TupleDesc(new Type[]{gbfieldtype, Type.INT_TYPE});
+        }
+
+        return new OpIterator() {
+            private Iterator<Map.Entry<Field, Integer>> iter = aggregateMap.entrySet().iterator();
+            private boolean flag;
+
+            @Override
+            public void open() {
+                flag = false;
+                iter = aggregateMap.entrySet().iterator();
+            }
+
+            @Override
+            public boolean hasNext() {
+                return iter.hasNext() || (gbfield == NO_GROUPING && !flag);
+            }
+
+            @Override
+            public Tuple next() {
+                Tuple tuple = new Tuple(td);
+                if (gbfield == NO_GROUPING) {
+                    tuple.setField(0, new IntField(totalValue));
+                    flag = true;
+                } else {
+                    Map.Entry<Field, Integer> entry = iter.next();
+                    tuple.setField(0, entry.getKey());
+                    tuple.setField(1, new IntField(entry.getValue()));
+                }
+                // System.out.println(tuple);
+                return tuple;
+            }
+
+            @Override
+            public void rewind() {
+                open();
+            }
+
+            @Override
+            public TupleDesc getTupleDesc() {
+                return td;
+            }
+
+            @Override
+            public void close() {
+                iter = null;
+                flag = false;
+            }
+        };
     }
 
+     private int applyOp(int value1, int value2) {
+        switch (what) {
+            case MIN:
+                return Math.min(value1, value2);
+            case MAX:
+                return Math.max(value1, value2);
+            case SUM:
+                return value1 + value2;
+            case COUNT:
+                return value1 + 1;
+            default:
+                throw new UnsupportedOperationException("Unknown operation: " + what);
+        }
+    }
+
+    private int applyAvg(int value1, int value2, int currCount) {
+        return ((value1 * (currCount-1)) + value2)/currCount;
+    }
 }
