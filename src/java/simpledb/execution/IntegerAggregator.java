@@ -66,34 +66,22 @@ public class IntegerAggregator implements Aggregator {
         int aggregateValue = ((IntField) tup.getField(afield)).getValue();
 
         if (gbfield == NO_GROUPING) {
+            totalCount++;
             if (!startedFlag) {
                 startedFlag = true;
-                totalValue = aggregateValue;
+                totalValue = (what == Op.COUNT)? 1: aggregateValue;
             } else {
-                if (what == Op.AVG) {
-                    totalValue = applyAvg(totalValue, aggregateValue, totalCount + 1);
-                } else {
-                    totalValue = applyOp(totalValue, aggregateValue);
-                }
+                totalValue = applyOp(totalValue, aggregateValue);
             }
-            totalCount++;
         } else {
             if (aggregateMap.get(tup.getField(gbfield)) == null) {
-                if (what == Op.AVG) {
-                    avgCounts.put(tup.getField(gbfield), 1);
-                }
-                aggregateMap.put(tup.getField(gbfield), aggregateValue);
+                avgCounts.put(tup.getField(gbfield), 1);
+                aggregateMap.put(tup.getField(gbfield), (what == Op.COUNT)? 1: aggregateValue);
                 
             } else {
-                if (what == Op.AVG) {
-                    avgCounts.put(tup.getField(gbfield), avgCounts.get(tup.getField(gbfield)) + 1);
-                    aggregateMap.put(
-                        tup.getField(gbfield), 
-                        applyAvg(aggregateMap.get(tup.getField(gbfield)), aggregateValue, avgCounts.get(tup.getField(gbfield)))
-                    );
-                } else {
-                    aggregateMap.put(tup.getField(gbfield), applyOp(aggregateMap.get(tup.getField(gbfield)), aggregateValue));
-                }
+                avgCounts.put(tup.getField(gbfield), avgCounts.get(tup.getField(gbfield)) + 1);
+                aggregateMap.put(tup.getField(gbfield), applyOp(aggregateMap.get(tup.getField(gbfield)), aggregateValue));
+                
             }
         }
     }
@@ -133,12 +121,20 @@ public class IntegerAggregator implements Aggregator {
             public Tuple next() {
                 Tuple tuple = new Tuple(td);
                 if (gbfield == NO_GROUPING) {
-                    tuple.setField(0, new IntField(totalValue));
+                    if (what == Op.AVG) {
+                        tuple.setField(0, new IntField(totalValue/totalCount));
+                    } else {
+                        tuple.setField(0, new IntField(totalValue));
+                    }
                     flag = true;
                 } else {
                     Map.Entry<Field, Integer> entry = iter.next();
                     tuple.setField(0, entry.getKey());
-                    tuple.setField(1, new IntField(entry.getValue()));
+                    if (what == Op.AVG) {
+                        tuple.setField(1, new IntField(entry.getValue()/avgCounts.get(entry.getKey())));
+                    } else {
+                        tuple.setField(1, new IntField(entry.getValue()));
+                    }
                 }
                 // System.out.println(tuple);
                 return tuple;
@@ -169,6 +165,7 @@ public class IntegerAggregator implements Aggregator {
             case MAX:
                 return Math.max(value1, value2);
             case SUM:
+            case AVG:
                 return value1 + value2;
             case COUNT:
                 return value1 + 1;
@@ -177,7 +174,10 @@ public class IntegerAggregator implements Aggregator {
         }
     }
 
-    private int applyAvg(int value1, int value2, int currCount) {
-        return ((value1 * (currCount-1)) + value2)/currCount;
-    }
+    // private int applyAvg(int value1, int value2, int currCount) {
+    //     if (((value1 * (currCount-1)) + value2)/currCount<10 && ((value1 * (currCount-1)) + value2)/currCount != 0) {
+    //         System.out.println((int)Math.round((double)(value1 * (currCount-1) + value2 )/currCount));
+    //     }
+    //     return (int)Math.round((double)(value1 * (currCount-1) + value2 )/currCount);
+    // }
 }
