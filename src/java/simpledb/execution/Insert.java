@@ -98,9 +98,7 @@ public class Insert extends Operator {
                 insertedRecords++;
             }
         } catch (IOException e) {
-            // Handle the IOException here
-            e.printStackTrace(); // or log the exception
-            // You might want to throw a DbException or handle it based on your application's logic
+            e.printStackTrace(); 
         }
 
         // Create a tuple containing the number of inserted records

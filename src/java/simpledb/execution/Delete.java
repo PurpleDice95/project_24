@@ -19,6 +19,11 @@ import java.io.IOException;
 public class Delete extends Operator {
 
     private static final long serialVersionUID = 1L;
+    
+    private TransactionId transactionId;
+    private OpIterator child;
+    private TupleDesc td;
+    private boolean fetched;
 
     /**
      * Constructor specifying the transaction that this delete belongs to as
@@ -30,24 +35,28 @@ public class Delete extends Operator {
      *            The child operator from which to read tuples for deletion
      */
     public Delete(TransactionId t, OpIterator child) {
-        // some code goes here
+        this.transactionId = t;
+        this.child = child;
+        fetched = false;
+        this.td = new TupleDesc(new Type[]{Type.INT_TYPE});
     }
 
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return this.td;
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        // some code goes here
+        super.open();
+        child.open();
     }
 
     public void close() {
-        // some code goes here
+        super.close();
+        child.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+        child.rewind();
     }
 
     /**
@@ -60,19 +69,40 @@ public class Delete extends Operator {
      * @see BufferPool#deleteTuple
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        if (fetched) {
+            return null;
+        }
+
+        int numDeleted = 0;
+        while (child.hasNext()) {
+            Tuple tuple = child.next();
+            try {
+                Database.getBufferPool().deleteTuple(transactionId, tuple);
+                numDeleted++;
+            } catch (IOException e) {
+                // Handle IOException
+                e.printStackTrace();
+            }
+        }
+
+        // Create a tuple containing the number of deleted records
+        Tuple resultTuple = new Tuple(getTupleDesc());
+        resultTuple.setField(0, new IntField(numDeleted));
+        fetched = true;
+        return resultTuple;
     }
 
     @Override
     public OpIterator[] getChildren() {
-        // some code goes here
-        return null;
+        return new OpIterator[]{child};
     }
 
     @Override
     public void setChildren(OpIterator[] children) {
-        // some code goes here
+        if (children.length != 1) {
+            throw new IllegalArgumentException("Expected exactly one child");
+        }
+        child = children[0];
     }
 
 }
