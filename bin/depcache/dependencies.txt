@@ -699,6 +699,7 @@ java.util.concurrent.ConcurrentHashMap
 java.io.IOException
 simpledb.storage.Page
 simpledb.storage.BufferPool
+java.util.List
 simpledb.storage.DbFile
 java.util.concurrent.ConcurrentHashMap$KeySetView
 simpledb.storage.HeapFile
@@ -885,7 +886,6 @@ simpledb.storage.Tuple
 simpledb.execution.Aggregator
 java.util.HashMap
 java.lang.Object
-simpledb.storage.Field
 java.lang.Integer
 simpledb.storage.TupleDesc
 ||:simpledb.execution.IndexPredicate
@@ -2554,7 +2554,6 @@ simpledb.common.Database
 java.lang.Boolean
 java.lang.Math
 java.lang.String
-java.io.PrintStream
 java.lang.invoke.MethodHandles$Lookup
 simpledb.common.DbException
 java.util.Iterator
@@ -2577,7 +2576,9 @@ simpledb.execution.SeqScan
 org.junit.Assert
 simpledb.transaction.TransactionAbortedException
 ||:simpledb.BufferPoolWriteTest
+java.io.PrintStream
 simpledb.TestUtil
+java.lang.System
 simpledb.storage.Tuple
 junit.framework.JUnit4TestAdapter
 simpledb.common.Utility

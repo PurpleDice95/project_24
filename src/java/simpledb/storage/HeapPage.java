@@ -291,11 +291,11 @@ public class HeapPage implements Page {
      */
     public void markDirty(boolean dirty, TransactionId tid) {
         if (dirty) {
-            this.dirty = true;
-            this.dirtiedBy = tid;
+            dirty = true;
+            dirtiedBy = tid;
         } else {
-            this.dirty = false;
-            this.dirtiedBy = null;
+            dirty = false;
+            dirtiedBy = null;
         }
     }
 

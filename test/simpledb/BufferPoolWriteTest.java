@@ -133,8 +133,10 @@ public class BufferPoolWriteTest extends TestUtil.CreateHeapFile {
     	it.open();
     	
     	int count = 0;
+		System.out.println(it.hasNext());
     	while(it.hasNext()) {
     		it.next();
+			
     		count++;
     	}
     	assertEquals(10, count);

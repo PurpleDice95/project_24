@@ -174,10 +174,4 @@ public class IntegerAggregator implements Aggregator {
         }
     }
 
-    // private int applyAvg(int value1, int value2, int currCount) {
-    //     if (((value1 * (currCount-1)) + value2)/currCount<10 && ((value1 * (currCount-1)) + value2)/currCount != 0) {
-    //         System.out.println((int)Math.round((double)(value1 * (currCount-1) + value2 )/currCount));
-    //     }
-    //     return (int)Math.round((double)(value1 * (currCount-1) + value2 )/currCount);
-    // }
 }

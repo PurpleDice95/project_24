@@ -7,9 +7,7 @@ import simpledb.storage.Tuple;
 import simpledb.storage.Field;
 import simpledb.storage.IntField;
 import simpledb.storage.TupleDesc;
-import simpledb.storage.TupleIterator;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -129,20 +127,5 @@ public class StringAggregator implements Aggregator {
         };
     }
 
-    // Helper Functions below
-    private int getUpdatedCount(Tuple tup) {
-        Field groupByField = getGroupByField(tup);
-        int currentCount = this.aggregateMap.getOrDefault(groupByField, 0);
-        return ++currentCount;
-    }
-    private Field getGroupByField(Tuple tup) {
-        Field groupByField;
-        if (this.gbfield == Aggregator.NO_GROUPING) {
-            groupByField = null;
-        } else {
-            groupByField = tup.getField(this.gbfield);
-        }
-        return groupByField;
-    }
 
 }

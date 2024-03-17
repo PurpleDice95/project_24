@@ -8,7 +8,7 @@ import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
-
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -157,7 +157,16 @@ public class BufferPool {
         if (heapFile == null) {
             throw new DbException("HeapFile is null");
         }
-        heapFile.insertTuple(tid, t);
+        List<Page> affectedPages = heapFile.insertTuple(tid, t);
+
+        for (Page pg : affectedPages) {
+            pg.markDirty(true, tid);
+            if (!bufferPool.containsKey(pg.getId()) && bufferPool.size() >= numPages) {
+                evictPage();
+            }
+            bufferPool.remove(pg.getId());
+            bufferPool.put(pg.getId(), pg);
+        }
     }
 
     /**
@@ -186,7 +195,16 @@ public class BufferPool {
         if (heapFile == null) {
             throw new DbException("HeapFile is null");
         }
-        heapFile.deleteTuple(tid, t);
+        List<Page> affectedPages = heapFile.deleteTuple(tid, t);
+        
+        for (Page pg : affectedPages) {
+            pg.markDirty(true, tid);
+            if (!bufferPool.containsKey(pg.getId()) && bufferPool.size() >= numPages) {
+                evictPage();
+            }
+            bufferPool.remove(pg.getId());
+            bufferPool.put(pg.getId(), pg);
+        }
     }
 
     /**
@@ -243,6 +261,7 @@ public class BufferPool {
      */
     private synchronized  void evictPage() throws DbException {
         PageId victimPid = null;
+        // LRU, hashmap order
         for (PageId pid : bufferPool.keySet()) {
             Page page = bufferPool.get(pid);
             if (page.isDirty() == null) {

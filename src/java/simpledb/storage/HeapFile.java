@@ -75,7 +75,7 @@ public class HeapFile implements DbFile {
             int offset = pid.getPageNumber() * BufferPool.getPageSize();
             byte[] data = new byte[BufferPool.getPageSize()];
             raf.seek(offset);
-            raf.readFully(data);
+            raf.read(data);
             raf.close();
             return new HeapPage((HeapPageId) pid, data);
         } catch (IOException e) {
@@ -83,6 +83,7 @@ public class HeapFile implements DbFile {
         }
         return null;
     }
+
 
     // see DbFile.java for javadocs
     public void writePage(Page page) throws IOException {
