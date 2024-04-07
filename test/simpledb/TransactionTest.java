@@ -92,7 +92,6 @@ public class TransactionTest extends TestUtil.CreateHeapFile {
       Tuple tup = it.next();
       IntField f0 = (IntField) tup.getField(0);
       IntField f1 = (IntField) tup.getField(1);
-
       if (f0.getValue() == 6 && f1.getValue() == 830) {
         found = true;
         break;
