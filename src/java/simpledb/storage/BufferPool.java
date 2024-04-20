@@ -314,7 +314,7 @@ public class BufferPool {
         // LRU, hashmap order
         for (PageId pid : bufferPool.keySet()) {
             Page page = bufferPool.get(pid);
-            if (page.isDirty() == null) {
+            if (page.isDirty() == null && !lockManager.pageHasLock(pid)){
                 victimPid = pid;
                 break;
             }
